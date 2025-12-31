@@ -1,0 +1,171 @@
+Model Name: Customer Default Risk Model (Proxy PD)
+Date: 2025
+Owner: Data Scienctist - Leila Barmoudeh
+
+1. Model Overview and Purpose
+
+1.1 Business Objective
+The purpose of this model is to estimate the probability of customer default (PD) based on historical transactional and behavioral data. The model is designed to identify customers exhibiting elevated risk of financial loss due to unstable purchasing behavior.
+1.2 Business Use Case
+
+This model supports:
+Early-warning risk monitoring
+Customer risk ranking
+Targeted intervention (e.g., review, policy adjustment)
+
+1.3 Out of Scope
+The model is not intended for:
+Automated credit approval or rejection
+Loan pricing or limit assignment
+Regulatory capital calculation
+
+2. Intended Use & Scope
+
+Intended users: Risk analysts, data scientists, business stakeholders
+
+Decision support: Advisory only
+
+Deployment context: Batch scoring / portfolio monitoring
+
+Frequency: Periodic (e.g., monthly)
+
+The model provides relative risk ranking, not absolute creditworthiness.
+
+3. Data Description
+3.1 Data Source
+Historical transactional retail data
+Customer-level aggregation derived from order-level records
+
+3.2 Observation Unit
+Customer
+
+3.3 Time Coverage
+Historical snapshot (single observation per customer)
+
+3.4 Key Variables
+Order frequency
+Sales volume
+Shipping behavior
+Customer tenure
+
+3.5 Excluded Data
+Personally identifiable information (PII)
+Demographic or protected attributes
+External credit bureau data
+
+4. Target Definition (Proxy Default)
+4.1 Rationale
+True payment default data was unavailable. A proxy default definition was constructed using observed loss-related behaviors, a common approach in early-stage credit risk 
+and trade-credit modeling.
+
+4.2 Definition
+
+A customer is labeled as default (1) if any of the following conditions are met:
+Return rate ≥ 40%, OR
+Return rate ≥ 20% AND
+Total profit < 0, AND
+Average discount ≥ 30%
+All other customers are labeled non-default (0).
+
+4.3 Portfolio Bad Rate
+5.33%, consistent with typical commercial credit / trade-risk portfolios
+
+4.4 Limitations
+Proxy labels may not capture all true default events
+Thresholds are heuristic and calibrated for modeling feasibility.
+
+5. Feature Engineering
+5.1 Feature Categories
+
+Behavioral: order frequency, shipping delays
+Stability: customer tenure
+Volume: total orders, total sales
+
+5.2 Leakage Prevention
+Variables directly used in the target definition were excluded from modeling, including:
+Return rate
+Average discount
+
+Total profit
+This prevents target imprinting and artificially inflated performance.
+
+6. Model Methodology
+6.1 Champion Model
+Logistic Regression (regularized)
+Transparent
+Stable
+Governance-friendly
+
+6.2 Challenger Model
+XGBoost (tree ensemble)
+Captures non-linear interactions
+Used for performance comparison only
+Interpreted using SHAP
+
+6.3 Class Imbalance Handling
+Class weighting applied
+No synthetic resampling used
+
+7. Model Performance
+7.1 Summary Metrics
+Model	                     ROC-AUC	PR-AUC
+Logistic Regression       	0.6755	0.3352
+XGBoost	                    0.6729	0.3418
+7.2 Interpretation
+
+Discrimination is moderate and realistic
+Performance aligns with expectations for behavioral proxy PD models
+PR-AUC substantially exceeds baseline bad rate (5.33%)
+
+7. Model Performance
+7.1 Summary Metrics
+Model	ROC-AUC	PR-AUC
+Logistic Regression	0.6755	0.3352
+XGBoost	0.6729	0.3418
+7.2 Interpretation
+
+Discrimination is moderate and realistic. Performance aligns with expectations for behavioral proxy PD models. PR-AUC substantially exceeds baseline bad rate (5.33%)
+
+9. Bias, Fairness and Ethical Considerations
+9.1 Sensitive Attributes
+No protected or demographic attributes included
+
+9.2 Known Risks
+Behavioral proxies may correlate with unobserved socioeconomic factors. Causality is not inferred.
+
+9.3 Mitigations
+Model positioned as advisory. Human review recommended for high-risk cases. 
+
+10. Stability, Monitoring & Drift
+10.1 Monitoring Metrics
+Population Stability Index (PSI) for features. Score PSI for predicted PDs.
+
+10.2 Thresholds
+PSI	Interpretation
+< 0.10	Stable
+0.10 – 0.25	Monitor
+> 0.25	Investigate / retrain
+10.3 Retraining Triggers
+- Sustained score PSI > 0.25
+- Material performance degradation
+- Significant portfolio composition change
+
+11. Limitations & Risks
+
+- Proxy default labels, not true payment defaults
+- No macroeconomic or temporal dynamics
+- No causal interpretation
+- Performance may degrade outside observed data distribution
+- This model should not be used as a sole decision engine.
+
+12. Governance and Ownership
+
+- Model Owner: Data Science
+- Review Frequency: Periodic (e.g., quarterly)
+- Change Management: Versioned updates with documented rationale
+
+13. Summary Statement
+
+This model demonstrates a production-style probability of default pipeline with appropriate attention to data leakage,
+interpretability, monitoring, and governance.
+It is suitable for early-warning risk assessment and portfolio monitoring, but not for automated credit decisioning.
